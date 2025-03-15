@@ -6,11 +6,11 @@ import com.drew.metadata.Metadata
 import com.drew.metadata.exif.GpsDirectory
 import fr.louisvolat.backpaking.model.Picture
 import fr.louisvolat.backpaking.repository.PictureRepository
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import java.nio.file.Files
 import java.time.LocalDateTime
-import java.util.*
 
 @Service
 class PictureService(
@@ -18,6 +18,12 @@ class PictureService(
     private val storageService: StorageService,
     private val imageConverterService: ImageConverterService
 ) {
+
+    @Value("\${app.upload.dir}")
+    private lateinit var uploadDir: String
+
+    @Value("\${app.root.url}")
+    private lateinit var rootUrl: String
 
     fun getAllPictures(): List<Picture> = pictureRepository.findAll()
 
@@ -52,26 +58,26 @@ class PictureService(
             // Conversion de l'image en différents formats WebP
             val convertedImages = imageConverterService.convertToWebP(relativeFolderPath, originalFilename)
 
+            // Création du chemin complet d'acces depuis le navigateur
+            val displayRelativePath = "$uploadDir/$relativeFolderPath"
+            // Mapping des chemins des images converties en chemins relatifs
+            val usableConvertedImageValue = mapConvertedImagesToRelativePaths(displayRelativePath, convertedImages)
+
             // Création de l'objet Picture avec le chemin complet incluant le dossier quotidien et le sous-dossier
             val picture = Picture(
-                path = "$relativeFolderPath/$originalFilename",
+                rawVersion = "$rootUrl/$displayRelativePath/$originalFilename",
                 latitude = gpsData.first.toString(),
                 longitude = gpsData.second.toString(),
                 altitude = gpsData.third,
                 date = dateTime,
-                // Stockage des chemins des versions converties (à adapter selon votre modèle Picture)
-                // Exemple: si votre modèle Picture a des champs pour les différentes versions
-                // desktopVersions = convertedImages["desktop"]?.joinToString(","),
-                // tabletVersions = convertedImages["tablet"]?.joinToString(","),
-                // mobileVersions = convertedImages["mobile"]?.joinToString(","),
-                // iconVersions = convertedImages["icon"]?.joinToString(",")
+                desktopVersions = usableConvertedImageValue["desktop"]?.joinToString(","),
+                tabletVersions = usableConvertedImageValue["tablet"]?.joinToString(","),
+                mobileVersions = usableConvertedImageValue["mobile"]?.joinToString(","),
+                iconVersions = usableConvertedImageValue["icon"]?.joinToString(",")
             )
 
             // Suppression du fichier temporaire
             Files.deleteIfExists(tempFile)
-
-            // Vous pourriez vouloir sérialiser ou stocker les chemins des versions converties
-            // dans la base de données. Vous devrez peut-être modifier votre modèle Picture.
 
             return Result.success(pictureRepository.save(picture))
         } catch (e: Exception) {
@@ -79,11 +85,23 @@ class PictureService(
         }
     }
 
+    fun mapConvertedImagesToRelativePaths(
+        relativeFolderPath: String,
+        convertedImages: Map<String, List<String?>>
+    ): Map<String, List<String?>> {
+        return convertedImages.mapValues { (_, paths) ->
+            paths.mapIndexed { index, path ->
+                if (path != null) "$rootUrl/$relativeFolderPath/$path ${index + 1}x" else null
+            }
+        }
+    }
+
+
     fun deletePicture(id: Long): Boolean {
         val picture = pictureRepository.findById(id).orElse(null) ?: return false
 
         // Extraction du chemin du dossier parent (dossier quotidien/UUID)
-        val path = picture.path
+        val path = picture.rawVersion
         val folderPath = path.substringBeforeLast('/')
 
         // Suppression du dossier complet contenant toutes les versions de l'image

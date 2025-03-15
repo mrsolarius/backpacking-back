@@ -1,0 +1,34 @@
+databaseChangeLog:
+  - changeSet:
+      id: 04-update-pictures-table-rename-path-column
+      author: Louis
+      changes:
+        - renameColumn:
+            tableName: pictures
+            oldColumnName: path
+            newColumnName: raw_version
+  - changeSet:
+      id: 04-update-pictures-table-add-processed-version-column
+      author: Louis
+      changes:
+        - addColumn:
+            tableName: pictures
+            columns:
+              - column:
+                  name: desktop_versions
+                  type: VARCHAR(540)
+                  remarks: "Chemin vers la version de l'image pour bureau"
+              - column:
+                  name: mobile_versions
+                  type: VARCHAR(540)
+                  remarks: "Chemin vers la version de l'image pour mobile"
+              - column:
+                  name: tablet_versions
+                  type: VARCHAR(540)
+                  remarks: "Chemin vers la version de l'image pour tablette"
+              - column:
+                  name: icon_versions
+                  type: VARCHAR(540)
+                  remarks: "Chemin vers la version de l'image pour tablette"
+
+

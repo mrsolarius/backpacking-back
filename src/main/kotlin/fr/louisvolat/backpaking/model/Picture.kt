@@ -11,11 +11,15 @@ class Picture(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
-    var path: String,
     var latitude: String,
     var longitude: String,
     var altitude: String? = null,
     var date: LocalDateTime,
+    var rawVersion: String,
+    var desktopVersions: String?,
+    var mobileVersions: String?,
+    var tabletVersions: String?,
+    var iconVersions: String?,
 
     @Column(name = "created_at")
     val createdAt: LocalDateTime = LocalDateTime.now(),
