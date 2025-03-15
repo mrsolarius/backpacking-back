@@ -102,7 +102,7 @@ class PictureService(
 
         // Extraction du chemin du dossier parent (dossier quotidien/UUID)
         val path = picture.rawVersion
-        val folderPath = path.substringBeforeLast('/')
+        val folderPath = path.substringAfterLast("$uploadDir/").substringBeforeLast('/')
 
         // Suppression du dossier complet contenant toutes les versions de l'image
         val deleted = storageService.deleteDirectory(folderPath)
