@@ -1,0 +1,60 @@
+databaseChangeLog:
+  - changeSet:
+      id: 02-create-pictures-table
+      author: Louis
+      changes:
+        - createTable:
+            tableName: pictures
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+                  remarks: "Identifiant unique de l'image"
+              - column:
+                  name: path
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+                  remarks: "Chemin d'accès au fichier image"
+              - column:
+                  name: latitude
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+                  remarks: "Latitude de la position où l'image a été prise"
+              - column:
+                  name: longitude
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+                  remarks: "Longitude de la position où l'image a été prise"
+              - column:
+                  name: altitude
+                  type: varchar(255)
+                  constraints:
+                    nullable: true
+                  remarks: "Altitude à laquelle l'image a été prise (optionnelle)"
+              - column:
+                  name: date
+                  type: timestamp
+                  constraints:
+                    nullable: false
+                  remarks: "Date et heure de la prise de l'image"
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+                  remarks: "Date et heure de création de l'enregistrement dans la base de données"
+              - column:
+                  name: updated_at
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+                  remarks: "Date et heure de la dernière mise à jour de l'enregistrement"

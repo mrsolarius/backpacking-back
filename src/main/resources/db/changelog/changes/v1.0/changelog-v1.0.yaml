@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - include:
+      file: 01-create-coordinates-table.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 02-create-pictures-table.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 03-create-users-table.yaml
+      relativeToChangelogFile: true

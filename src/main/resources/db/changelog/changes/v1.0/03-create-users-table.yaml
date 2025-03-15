@@ -1,0 +1,61 @@
+databaseChangeLog:
+  - changeSet:
+      id: 03-create-users-table
+      author: Louis
+      changes:
+        - createTable:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  remarks: "Identifiant unique de l'utilisateur"
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(255)
+                  remarks: "Nom complet de l'utilisateur"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: email
+                  type: varchar(255)
+                  remarks: "Adresse e-mail unique de l'utilisateur"
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: password
+                  type: varchar(255)
+                  remarks: "Mot de passe haché pour l'authentification"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: email_verified_at
+                  type: datetime
+                  remarks: "Date et heure de vérification de l'email"
+                  constraints:
+                    nullable: true
+              - column:
+                  name: remember_token
+                  type: varchar(255)
+                  remarks: "Jeton pour les sessions de connexion persistantes"
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_at
+                  type: datetime
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  remarks: "Date et heure de création de l'utilisateur"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: datetime
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  remarks: "Date et heure de la dernière mise à jour de l'utilisateur"
+                  constraints:
+                    nullable: false

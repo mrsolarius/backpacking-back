@@ -7,7 +7,7 @@ plugins {
 }
 
 group = 'fr.louisvolat'
-version = '0.0.1-SNAPSHOT'
+version = '1.0.0'
 
 java {
 	toolchain {
@@ -23,13 +23,23 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-validation' // Ajouté pour les validations
 	implementation 'com.fasterxml.jackson.module:jackson-module-kotlin'
 	implementation 'org.jetbrains.kotlin:kotlin-reflect'
+	implementation 'com.drewnoakes:metadata-extractor:2.19.0'
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'// Ajouté pour lire les métadonnées EXIF
 	runtimeOnly 'org.postgresql:postgresql'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	compileOnly 'org.projectlombok:lombok:1.18.24'
+	annotationProcessor 'org.projectlombok:lombok:1.18.20'
+	// Ajouter Liquibase
+	implementation 'org.liquibase:liquibase-core'
+	// Pour le support YAML
+	implementation 'org.yaml:snakeyaml'
+	implementation 'org.sejda.imageio:webp-imageio:0.1.6'
 }
 
 kotlin {
