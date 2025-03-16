@@ -1,5 +1,6 @@
-package fr.louisvolat.backpaking.service
+package fr.louisvolat.backpaking.service.utils.images
 
+import fr.louisvolat.backpaking.service.utils.StorageService
 import jakarta.annotation.PreDestroy
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value

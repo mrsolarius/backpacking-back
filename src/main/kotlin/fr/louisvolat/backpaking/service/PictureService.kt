@@ -6,6 +6,8 @@ import com.drew.metadata.Metadata
 import com.drew.metadata.exif.GpsDirectory
 import fr.louisvolat.backpaking.model.Picture
 import fr.louisvolat.backpaking.repository.PictureRepository
+import fr.louisvolat.backpaking.service.utils.images.ImageConverterService
+import fr.louisvolat.backpaking.service.utils.StorageService
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile

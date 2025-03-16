@@ -1,4 +1,4 @@
-package fr.louisvolat.backpaking.service
+package fr.louisvolat.backpaking.service.utils.images
 
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value

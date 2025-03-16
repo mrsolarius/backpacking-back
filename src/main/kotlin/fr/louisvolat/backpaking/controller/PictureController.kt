@@ -1,6 +1,7 @@
 package fr.louisvolat.backpaking.controller
 
 import fr.louisvolat.backpaking.model.Picture
+import fr.louisvolat.backpaking.security.annotation.SecuredMethode
 import fr.louisvolat.backpaking.service.PictureService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -16,6 +17,7 @@ class PictureController(private val pictureService: PictureService) {
         return pictureService.getAllPictures()
     }
 
+    @SecuredMethode
     @PostMapping
     fun store(@RequestParam("picture") file: MultipartFile): ResponseEntity<String> {
         val result = pictureService.savePicture(file)
@@ -41,6 +43,7 @@ class PictureController(private val pictureService: PictureService) {
         return ResponseEntity(picture, HttpStatus.OK)
     }
 
+    @SecuredMethode
     @DeleteMapping("/{id}")
     fun destroy(@PathVariable id: Long): ResponseEntity<String> {
         val success = pictureService.deletePicture(id)
