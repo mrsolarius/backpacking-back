@@ -21,6 +21,10 @@ class Picture(
     var tabletVersions: String?,
     var iconVersions: String?,
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "travel_id", nullable = false)
+    var travel: Travel,
+
     @Column(name = "created_at")
     val createdAt: LocalDateTime = LocalDateTime.now(),
 

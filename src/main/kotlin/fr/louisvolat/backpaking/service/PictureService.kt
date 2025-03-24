@@ -6,17 +6,23 @@ import com.drew.metadata.Metadata
 import com.drew.metadata.exif.GpsDirectory
 import fr.louisvolat.backpaking.model.Picture
 import fr.louisvolat.backpaking.repository.PictureRepository
-import fr.louisvolat.backpaking.service.utils.images.ImageConverterService
+import fr.louisvolat.backpaking.repository.TravelRepository
 import fr.louisvolat.backpaking.service.utils.StorageService
+import fr.louisvolat.backpaking.service.utils.images.ImageConverterService
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
+import org.springframework.web.server.ResponseStatusException
 import java.nio.file.Files
 import java.time.LocalDateTime
+
+private const val TRAVEL_NOT_FOUND = "Travel not found"
 
 @Service
 class PictureService(
     private val pictureRepository: PictureRepository,
+    private val travelRepository: TravelRepository,
     private val storageService: StorageService,
     private val imageConverterService: ImageConverterService
 ) {
@@ -27,13 +33,20 @@ class PictureService(
     @Value("\${app.root.url}")
     private lateinit var rootUrl: String
 
-    fun getAllPictures(): List<Picture> = pictureRepository.findAll()
+    fun getPicturesByTravelId(travelId: Long): List<Picture> {
+        val travel = travelRepository.findById(travelId)
+            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, TRAVEL_NOT_FOUND) }
+        return travel.travelPictures
+    }
 
     fun getPictureById(id: Long): Picture? =
         pictureRepository.findById(id).orElse(null)
 
-    fun savePicture(file: MultipartFile): Result<Picture> {
+    fun savePicture(travelId: Long, file: MultipartFile): Result<Picture> {
         try {
+            val travel = travelRepository.findById(travelId)
+                .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, TRAVEL_NOT_FOUND) }
+
             // Vérifier que le fichier est bien une image
             if (!isImageFile(file)) {
                 return Result.failure(IllegalArgumentException("Not an image file"))
@@ -75,11 +88,25 @@ class PictureService(
                 desktopVersions = usableConvertedImageValue["desktop"]?.joinToString(","),
                 tabletVersions = usableConvertedImageValue["tablet"]?.joinToString(","),
                 mobileVersions = usableConvertedImageValue["mobile"]?.joinToString(","),
-                iconVersions = usableConvertedImageValue["icon"]?.joinToString(",")
+                iconVersions = usableConvertedImageValue["icon"]?.joinToString(","),
+                travel = travel
             )
 
             // Suppression du fichier temporaire
             Files.deleteIfExists(tempFile)
+
+            // Update travel start/end dates if needed
+            if (travel.startDate.isAfter(dateTime)) {
+                travel.startDate = dateTime
+                travel.updatedAt = LocalDateTime.now()
+                travelRepository.save(travel)
+            }
+
+            if (travel.endDate == null || travel.endDate!!.isBefore(dateTime)) {
+                travel.endDate = dateTime
+                travel.updatedAt = LocalDateTime.now()
+                travelRepository.save(travel)
+            }
 
             return Result.success(pictureRepository.save(picture))
         } catch (e: Exception) {
@@ -98,9 +125,15 @@ class PictureService(
         }
     }
 
+    fun deletePicture(travelId: Long, pictureId: Long): Boolean {
+        val travel = travelRepository.findById(travelId)
+            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, TRAVEL_NOT_FOUND) }
 
-    fun deletePicture(id: Long): Boolean {
-        val picture = pictureRepository.findById(id).orElse(null) ?: return false
+        val picture = pictureRepository.findById(pictureId)
+            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Picture not found") }
+
+        if (picture.travel.id != travel.id) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Picture does not belong to this travel")}
 
         // Extraction du chemin du dossier parent (dossier quotidien/UUID)
         val path = picture.rawVersion
@@ -109,11 +142,35 @@ class PictureService(
         // Suppression du dossier complet contenant toutes les versions de l'image
         val deleted = storageService.deleteDirectory(folderPath)
 
+        // Handle removing from cover picture if it's being used
+        if (picture.id == travel.coverPicture?.id) {
+            travel.coverPicture = null
+            travel.updatedAt = LocalDateTime.now()
+            travelRepository.save(travel)
+        }
+
         if (deleted) {
             pictureRepository.delete(picture)
             return true
         }
         return false
+    }
+
+    fun setCoverPicture(travelId: Long, pictureId: Long): Boolean {
+        val travel = travelRepository.findById(travelId)
+            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, TRAVEL_NOT_FOUND) }
+
+        val picture = pictureRepository.findById(pictureId)
+            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Picture not found") }
+
+        if (picture.travel.id != travel.id) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Picture does not belong to this travel")
+        }
+
+        travel.coverPicture = picture
+        travel.updatedAt = LocalDateTime.now()
+        travelRepository.save(travel)
+        return true
     }
 
     // Vérifie que le fichier est bien une image

@@ -1,0 +1,32 @@
+databaseChangeLog:
+  - changeSet:
+      id: 02-add-travel-id-to-coordinates
+      author: Louis
+      changes:
+        - addColumn:
+            tableName: coordinates
+            columns:
+              - column:
+                  name: travel_id
+                  type: bigint
+                  constraints:
+                    nullable: true
+                    foreignKeyName: fk_coordinate_travel
+                    references: travels(id)
+                  remarks: "Identifiant du voyage associé à cette coordonnée"
+
+  - changeSet:
+      id: 02-add-travel-id-to-pictures
+      author: Louis
+      changes:
+        - addColumn:
+            tableName: pictures
+            columns:
+              - column:
+                  name: travel_id
+                  type: bigint
+                  constraints:
+                    nullable: true
+                    foreignKeyName: fk_picture_travel
+                    references: travels(id)
+                  remarks: "Identifiant du voyage associé à cette image"

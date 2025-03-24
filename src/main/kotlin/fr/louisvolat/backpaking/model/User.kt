@@ -23,6 +23,9 @@ class User(
     @Column(name = "remember_token")
     var rememberToken: String? = null,
 
+    @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true)
+    var travels: MutableList<Travel> = mutableListOf(),
+
     @Column(name = "created_at")
     val createdAt: LocalDateTime = LocalDateTime.now(),
 

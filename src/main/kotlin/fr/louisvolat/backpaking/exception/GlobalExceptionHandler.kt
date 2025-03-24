@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
 import org.springframework.web.multipart.MaxUploadSizeExceededException
+import org.springframework.web.servlet.NoHandlerFoundException
+import org.springframework.web.servlet.resource.NoResourceFoundException
 import java.time.LocalDateTime
 
 @ControllerAdvice
@@ -97,6 +99,17 @@ class GlobalExceptionHandler {
             path = getCurrentRequestPath()
         )
         return ResponseEntity(errorResponse, HttpStatus.FORBIDDEN)
+    }
+
+    @ExceptionHandler(NoHandlerFoundException::class, NoResourceFoundException::class)
+    fun handleNotFound(ex: Exception): ResponseEntity<ErrorResponse> {
+        val errorResponse = ErrorResponse(
+            status = HttpStatus.NOT_FOUND.value(),
+            error = "Not Found",
+            message = ex.message ?: "Access Denied",
+            path = getCurrentRequestPath()
+        )
+        return ResponseEntity(errorResponse, HttpStatus.NOT_FOUND)
     }
 
     // Gérer les erreurs d'identifiants

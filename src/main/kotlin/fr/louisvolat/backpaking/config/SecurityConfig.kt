@@ -35,6 +35,7 @@ class SecurityConfig(
                 // Routes accessibles à tous
                 auth.requestMatchers("/$uploadDir/**").permitAll()
                 auth.requestMatchers("/api/**").permitAll() // Par défaut, toutes les routes API sont accessibles
+                auth.anyRequest().denyAll()
                 // Les routes spécifiques nécessitant une authentification seront gérées par @PreAuthorize
             }
             // Ajouter notre filtre JWT

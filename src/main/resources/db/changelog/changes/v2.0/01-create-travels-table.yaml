@@ -1,0 +1,70 @@
+databaseChangeLog:
+  - changeSet:
+      id: 01-create-travels-table
+      author: Louis
+      changes:
+        - createTable:
+            tableName: travels
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+                  remarks: "Identifiant unique du voyage"
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+                  remarks: "Nom du voyage"
+              - column:
+                  name: description
+                  type: text
+                  constraints:
+                    nullable: false
+                  remarks: "Description détaillée du voyage"
+              - column:
+                  name: start_date
+                  type: timestamp
+                  constraints:
+                    nullable: false
+                  remarks: "Date de début du voyage"
+              - column:
+                  name: end_date
+                  type: timestamp
+                  constraints:
+                    nullable: true
+                  remarks: "Date de fin du voyage (optionnelle pour les voyages en cours)"
+              - column:
+                  name: fk_cover_picture
+                  type: bigint
+                  constraints:
+                    nullable: true
+                    foreignKeyName: fk_travel_picture
+                    references: pictures(id)
+                  remarks: "Id vers l'image de couverture du voyage"
+              - column:
+                  name: fk_user
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_travel_user
+                    references: users(id)
+                  remarks: "Identifiant de l'utilisateur propriétaire du voyage"
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+                  remarks: "Date et heure de création de l'enregistrement"
+              - column:
+                  name: updated_at
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+                  remarks: "Date et heure de la dernière mise à jour de l'enregistrement"

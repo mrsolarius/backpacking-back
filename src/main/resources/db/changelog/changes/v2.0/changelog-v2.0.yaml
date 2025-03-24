@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - include:
+      file: 01-create-travels-table.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 02-add-travel-id.yaml
+      relativeToChangelogFile: true
