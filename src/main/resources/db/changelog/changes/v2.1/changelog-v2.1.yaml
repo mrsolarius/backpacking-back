@@ -2,3 +2,6 @@ databaseChangeLog:
   - include:
       file: 01-create-picture-versions-table.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 02-remove-pictures-columns.yaml
+      relativeToChangelogFile: true

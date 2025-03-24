@@ -1,0 +1,16 @@
+databaseChangeLog:
+  - changeSet:
+      id: 02-remove-pictures-columns
+      author: Louis
+      changes:
+        - dropColumn:
+            tableName: pictures
+            columns:
+              - column:
+                  name: desktop_versions
+              - column:
+                  name: icon_versions
+              - column:
+                  name: mobile_versions
+              - column:
+                  name: tablet_versions
