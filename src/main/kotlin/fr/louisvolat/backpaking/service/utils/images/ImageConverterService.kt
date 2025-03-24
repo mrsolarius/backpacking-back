@@ -65,16 +65,16 @@ class ImageConverterService(
     /**
      * Convertit l'image originale en plusieurs versions
      */
-    fun convertToWebP(folderRelativePath: String, originalFilename: String): Map<String, List<String>> {
+    fun convertToWebP(folderRelativePath: String, originalFilename: String): Map<String, List<Pair<String, Int>>> {
         val imagePath = storageService.getFullPath(Paths.get(folderRelativePath, originalFilename).toString())
         val originalImage = loadOriginalImage(imagePath)
 
-        val results = mutableMapOf<String, MutableList<String>>()
+        val results = mutableMapOf<String, MutableList<Pair<String, Int>>>()
         val futures = mutableListOf<Future<*>>()
 
         // Traitement pour chaque type d'appareil
         conversionFormats.forEach { (deviceType, formats) ->
-            val deviceTypeFiles = mutableListOf<String>()
+            val deviceTypeFiles = mutableListOf<Pair<String, Int>>()
             results[deviceType] = deviceTypeFiles
 
             // Création du dossier pour ce type d'appareil
@@ -85,7 +85,7 @@ class ImageConverterService(
                 val future = executorService.submit {
                     if (originalImage != null) {
                         processImageFormat(originalImage, deviceType, format, deviceFolder, deviceTypeFiles)
-                    }else{
+                    } else {
                         logger.error("Failed to load original image for $deviceType ${format.width}x${format.height}")
                     }
                 }
@@ -123,7 +123,7 @@ class ImageConverterService(
         deviceType: String,
         format: FormatConfig,
         deviceFolder: Path,
-        deviceTypeFiles: MutableList<String>
+        deviceTypeFiles: MutableList<Pair<String, Int>>
     ) {
         try {
             val isIcon = deviceType == "icon"
@@ -152,7 +152,7 @@ class ImageConverterService(
         deviceType: String,
         format: FormatConfig,
         deviceFolder: Path,
-        deviceTypeFiles: MutableList<String>,
+        deviceTypeFiles: MutableList<Pair<String, Int>>,
         targetWidthHeight: WidthHeightTuple,
         isIcon: Boolean
     ): Boolean {
@@ -161,7 +161,7 @@ class ImageConverterService(
 
         // Vérifier si le fichier existe déjà
         if (storageService.fileExists(outputPath)) {
-            addToResultsList(deviceType, webpFilename, deviceTypeFiles)
+            addToResultsList(deviceType, webpFilename, format.scale, deviceTypeFiles)
             logger.info("File already exists, skipping conversion: $webpFilename")
             return true
         }
@@ -181,7 +181,7 @@ class ImageConverterService(
 
             // Conversion avec FFmpeg
             if (ffmpegService.convertToWebP(tempFile, outputPath.toFile())) {
-                addToResultsList(deviceType, webpFilename, deviceTypeFiles)
+                addToResultsList(deviceType, webpFilename, format.scale, deviceTypeFiles)
                 logger.info("Successfully converted to WebP: $webpFilename")
                 return true
             }
@@ -203,7 +203,7 @@ class ImageConverterService(
         deviceType: String,
         format: FormatConfig,
         deviceFolder: Path,
-        deviceTypeFiles: MutableList<String>,
+        deviceTypeFiles: MutableList<Pair<String, Int>>,
         targetWidthHeight: WidthHeightTuple,
         isIcon: Boolean
     ) {
@@ -212,7 +212,7 @@ class ImageConverterService(
 
         // Vérifier si le fichier existe déjà
         if (storageService.fileExists(fallbackPath)) {
-            addToResultsList(deviceType, fallbackFilename, deviceTypeFiles)
+            addToResultsList(deviceType, fallbackFilename, format.scale, deviceTypeFiles)
             logger.info("Fallback file already exists: $fallbackFilename")
             return
         }
@@ -228,7 +228,7 @@ class ImageConverterService(
         }
 
         if (saved) {
-            addToResultsList(deviceType, fallbackFilename, deviceTypeFiles)
+            addToResultsList(deviceType, fallbackFilename, format.scale, deviceTypeFiles)
             logger.info("Saved as fallback format $fallbackFormat: $fallbackFilename")
         }
     }
@@ -252,9 +252,14 @@ class ImageConverterService(
     /**
      * Ajoute un fichier à la liste des résultats de manière thread-safe
      */
-    private fun addToResultsList(deviceType: String, filename: String, deviceTypeFiles: MutableList<String>) {
+    private fun addToResultsList(
+        deviceType: String,
+        filename: String,
+        scale: Int,
+        deviceTypeFiles: MutableList<Pair<String, Int>>
+    ) {
         synchronized(deviceTypeFiles) {
-            deviceTypeFiles.add("$deviceType/$filename")
+            deviceTypeFiles.add(Pair("$deviceType/$filename", scale))
         }
     }
 

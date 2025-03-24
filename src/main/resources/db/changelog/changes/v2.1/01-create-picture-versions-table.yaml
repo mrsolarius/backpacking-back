@@ -1,0 +1,56 @@
+databaseChangeLog:
+  - changeSet:
+      id: 01_create_picture_versions_table
+      author: Louis
+      changes:
+        - createTable:
+            tableName: picture_versions
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+                  remarks: "Identifiant unique de la version de l'image"
+              - column:
+                  name: fk_image
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_image_version_image
+                    references: pictures(id)
+                  remarks: "Identifiant unique de l'image associée à la version"
+              - column:
+                  name: path
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+                  remarks: "Chemin d'accès au fichier image"
+              - column:
+                  name: resolution
+                  type: tinyint
+                  constraints:
+                    nullable: false
+                  remarks: "Résolution de l'image"
+              - column:
+                  name: version_type
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+                  remarks: "Type de version de l'image parmis les suivants : desktop, tablet, mobile, icon"
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+                  remarks: "Date et heure de création de l'enregistrement dans la base de données"
+              - column:
+                  name: updated_at
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+                  remarks: "Date et heure de la dernière mise à jour de l'enregistrement"

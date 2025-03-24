@@ -5,6 +5,7 @@ import com.drew.lang.Rational
 import com.drew.metadata.Metadata
 import com.drew.metadata.exif.GpsDirectory
 import fr.louisvolat.backpaking.model.Picture
+import fr.louisvolat.backpaking.model.PictureVersions
 import fr.louisvolat.backpaking.repository.PictureRepository
 import fr.louisvolat.backpaking.repository.TravelRepository
 import fr.louisvolat.backpaking.service.utils.StorageService
@@ -73,10 +74,8 @@ class PictureService(
             // Conversion de l'image en différents formats WebP
             val convertedImages = imageConverterService.convertToWebP(relativeFolderPath, originalFilename)
 
-            // Création du chemin complet d'acces depuis le navigateur
+            // Création du chemin complet d'accès depuis le navigateur
             val displayRelativePath = "$uploadDir/$relativeFolderPath"
-            // Mapping des chemins des images converties en chemins relatifs
-            val usableConvertedImageValue = mapConvertedImagesToRelativePaths(displayRelativePath, convertedImages)
 
             // Création de l'objet Picture avec le chemin complet incluant le dossier quotidien et le sous-dossier
             val picture = Picture(
@@ -85,17 +84,30 @@ class PictureService(
                 longitude = gpsData.second.toString(),
                 altitude = gpsData.third,
                 date = dateTime,
-                desktopVersions = usableConvertedImageValue["desktop"]?.joinToString(","),
-                tabletVersions = usableConvertedImageValue["tablet"]?.joinToString(","),
-                mobileVersions = usableConvertedImageValue["mobile"]?.joinToString(","),
-                iconVersions = usableConvertedImageValue["icon"]?.joinToString(","),
                 travel = travel
             )
+
+            // Création des versions de l'image
+            val pictureVersions = mutableListOf<PictureVersions>()
+
+            convertedImages.forEach { (type, paths) ->
+                paths.forEach { (path, scale) ->
+                    pictureVersions.add(
+                        PictureVersions(
+                            picture = picture,
+                            path = "$rootUrl/$displayRelativePath/$path",
+                            resolution = scale.toByte(),
+                            versionType = type
+                        )
+                    )
+                }
+            }
+
+            picture.versions = pictureVersions
 
             // Suppression du fichier temporaire
             Files.deleteIfExists(tempFile)
 
-            // Update travel start/end dates if needed
             if (travel.startDate.isAfter(dateTime)) {
                 travel.startDate = dateTime
                 travel.updatedAt = LocalDateTime.now()
@@ -114,17 +126,6 @@ class PictureService(
         }
     }
 
-    fun mapConvertedImagesToRelativePaths(
-        relativeFolderPath: String,
-        convertedImages: Map<String, List<String?>>
-    ): Map<String, List<String?>> {
-        return convertedImages.mapValues { (_, paths) ->
-            paths.mapIndexed { index, path ->
-                if (path != null) "$rootUrl/$relativeFolderPath/$path ${index + 1}x" else null
-            }
-        }
-    }
-
     fun deletePicture(travelId: Long, pictureId: Long): Boolean {
         val travel = travelRepository.findById(travelId)
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, TRAVEL_NOT_FOUND) }
@@ -133,7 +134,8 @@ class PictureService(
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Picture not found") }
 
         if (picture.travel.id != travel.id) {
-            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Picture does not belong to this travel")}
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Picture does not belong to this travel")
+        }
 
         // Extraction du chemin du dossier parent (dossier quotidien/UUID)
         val path = picture.rawVersion

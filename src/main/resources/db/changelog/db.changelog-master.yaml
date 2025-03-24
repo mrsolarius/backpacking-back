@@ -5,4 +5,6 @@ databaseChangeLog:
   - include:
       file: changes/v2.0/changelog-v2.0.yaml
       relativeToChangelogFile: true
-  # Vous ajouterez d'autres fichiers de changements ici au fur et à mesure
+  - include:
+      file: changes/v2.1/changelog-v2.1.yaml
+      relativeToChangelogFile: true

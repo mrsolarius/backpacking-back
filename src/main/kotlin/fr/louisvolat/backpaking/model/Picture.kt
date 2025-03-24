@@ -16,10 +16,6 @@ class Picture(
     var altitude: String? = null,
     var date: LocalDateTime,
     var rawVersion: String,
-    var desktopVersions: String?,
-    var mobileVersions: String?,
-    var tabletVersions: String?,
-    var iconVersions: String?,
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "travel_id", nullable = false)
@@ -29,5 +25,8 @@ class Picture(
     val createdAt: LocalDateTime = LocalDateTime.now(),
 
     @Column(name = "updated_at")
-    var updatedAt: LocalDateTime = LocalDateTime.now()
+    var updatedAt: LocalDateTime = LocalDateTime.now(),
+
+    @OneToMany(mappedBy = "picture", cascade = [CascadeType.ALL], orphanRemoval = true)
+    var versions: MutableList<PictureVersions> = mutableListOf()
 )
