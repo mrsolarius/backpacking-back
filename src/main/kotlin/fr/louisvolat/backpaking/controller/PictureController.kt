@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
+import org.springframework.web.server.ResponseStatusException
 
 @RestController
 @RequestMapping("/api/travels/{travelId}/pictures")
@@ -34,18 +35,17 @@ class PictureController(private val pictureService: PictureService) {
     fun store(
         @PathVariable travelId: Long,
         @RequestParam("picture") file: MultipartFile
-    ): ResponseEntity<String> {
+    ): ResponseEntity<PictureDTO> {
         val result = pictureService.savePicture(travelId, file)
 
         return result.fold(
-            onSuccess = { ResponseEntity("Success", HttpStatus.OK) },
+            onSuccess = { ResponseEntity(PictureDTO.fromEntity(result.getOrThrow()), HttpStatus.OK) },
             onFailure = {
-                val errorMessage = it.message ?: "Unknown error"
-                val status = if (errorMessage.contains("missing exif info"))
-                    HttpStatus.INTERNAL_SERVER_ERROR
-                else
-                    HttpStatus.BAD_REQUEST
-                ResponseEntity(errorMessage, status)
+                throw ResponseStatusException(
+                    if (it.message?.contains("missing exif info") == true) HttpStatus.INTERNAL_SERVER_ERROR else HttpStatus.BAD_REQUEST,
+                    it.message ?: "Unknown error",
+                    it
+                )
             }
         )
     }

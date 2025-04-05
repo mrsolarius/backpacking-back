@@ -2,7 +2,7 @@ package fr.louisvolat.backpaking.dto
 
 import fr.louisvolat.backpaking.model.Picture
 import fr.louisvolat.backpaking.model.PictureVersions
-
+import java.time.ZoneOffset
 
 
 data class PictureDTO(
@@ -24,9 +24,9 @@ data class PictureDTO(
                 latitude = picture.latitude,
                 longitude = picture.longitude,
                 altitude = picture.altitude,
-                date = picture.date.toString(),
-                createdAt = picture.createdAt.toString(),
-                updatedAt = picture.updatedAt.toString(),
+                date = picture.date.atZone(ZoneOffset.UTC).toString(),
+                createdAt = picture.createdAt.atZone(ZoneOffset.UTC).toString(),
+                updatedAt = picture.updatedAt.atZone(ZoneOffset.UTC).toString(),
                 versions = picture.versions
                     .groupBy { it.versionType }
                     .mapValues { (_, versions) ->
@@ -54,8 +54,8 @@ data class PictureVersionsDTO(
                 path = pictureVersion.path,
                 resolution = pictureVersion.resolution,
                 versionType = pictureVersion.versionType,
-                createdAt = pictureVersion.createdAt.toString(),
-                updatedAt = pictureVersion.updatedAt.toString()
+                createdAt = pictureVersion.createdAt.atZone(ZoneOffset.UTC).toString(),
+                updatedAt = pictureVersion.updatedAt.atZone(ZoneOffset.UTC).toString()
             )
         }
     }

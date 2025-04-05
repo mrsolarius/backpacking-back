@@ -2,6 +2,7 @@ package fr.louisvolat.backpaking.dto
 
 import fr.louisvolat.backpaking.model.Coordinate
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.time.ZonedDateTime
 
 data class CoordinateDTO(
@@ -19,8 +20,8 @@ data class CoordinateDTO(
                 latitude = coordinate.latitude,
                 longitude = coordinate.longitude,
                 date = coordinate.date,
-                createdAt = coordinate.createdAt.toString(),
-                updatedAt = coordinate.updatedAt.toString()
+                createdAt = coordinate.createdAt.atZone(ZoneOffset.UTC).toString(),
+                updatedAt = coordinate.updatedAt.atZone(ZoneOffset.UTC).toString()
             )
         }
     }

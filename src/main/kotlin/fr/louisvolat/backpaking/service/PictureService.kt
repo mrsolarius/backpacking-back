@@ -79,7 +79,7 @@ class PictureService(
 
             // Création de l'objet Picture avec le chemin complet incluant le dossier quotidien et le sous-dossier
             val picture = Picture(
-                rawVersion = "$rootUrl/$displayRelativePath/$originalFilename",
+                rawVersion = "/$displayRelativePath/$originalFilename",
                 latitude = gpsData.first.toString(),
                 longitude = gpsData.second.toString(),
                 altitude = gpsData.third,
@@ -95,7 +95,7 @@ class PictureService(
                     pictureVersions.add(
                         PictureVersions(
                             picture = picture,
-                            path = "$rootUrl/$displayRelativePath/$path",
+                            path = "/$displayRelativePath/$path",
                             resolution = scale.toByte(),
                             versionType = type
                         )

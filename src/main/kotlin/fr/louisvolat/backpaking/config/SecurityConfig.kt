@@ -33,6 +33,7 @@ class SecurityConfig(
             }
             .authorizeHttpRequests { auth ->
                 // Routes accessibles à tous
+                auth.requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 auth.requestMatchers("/$uploadDir/**").permitAll()
                 auth.requestMatchers("/api/**").permitAll() // Par défaut, toutes les routes API sont accessibles
                 auth.anyRequest().denyAll()

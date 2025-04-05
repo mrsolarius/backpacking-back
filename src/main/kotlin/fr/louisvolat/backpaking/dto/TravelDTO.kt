@@ -1,6 +1,7 @@
 package fr.louisvolat.backpaking.dto
 
 import fr.louisvolat.backpaking.model.Travel
+import java.time.ZoneOffset
 import java.time.ZonedDateTime
 
 data class TravelDTO(
@@ -9,7 +10,7 @@ data class TravelDTO(
     val description: String,
     val startDate: String,
     val endDate: String?,
-    val coverPictureId: Long?,
+    val coverPicture: PictureDTO?,
     val userId: Long,
     val coordinates: List<CoordinateDTO>?,
     val pictures: List<PictureDTO>?,
@@ -22,14 +23,14 @@ data class TravelDTO(
                 id = travel.id,
                 name = travel.name,
                 description = travel.description,
-                startDate = travel.startDate.toString(),
-                endDate = travel.endDate?.toString(),
-                coverPictureId = travel.coverPicture?.id,
+                startDate = travel.startDate.atZone(ZoneOffset.UTC).toString(),
+                endDate = travel.endDate?.atZone(ZoneOffset.UTC)?.toString(),
+                coverPicture = travel.coverPicture?.let { PictureDTO.fromEntity(it) },
                 userId = travel.user.id!!,
                 coordinates = if (includeDetails) travel.coordinates.map { CoordinateDTO.fromEntity(it) } else null,
                 pictures = if (includeDetails) travel.travelPictures.map { PictureDTO.fromEntity(it) } else null,
-                createdAt = travel.createdAt.toString(),
-                updatedAt = travel.updatedAt.toString()
+                createdAt = travel.createdAt.atZone(ZoneOffset.UTC).toString(),
+                updatedAt = travel.updatedAt.atZone(ZoneOffset.UTC).toString()
             )
         }
     }
