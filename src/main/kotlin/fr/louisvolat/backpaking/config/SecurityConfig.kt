@@ -39,9 +39,6 @@ class SecurityConfig(
                 auth.anyRequest().denyAll()
                 // Les routes spécifiques nécessitant une authentification seront gérées par @PreAuthorize
             }
-            .requiresChannel { channel ->
-                channel.anyRequest().requiresSecure()
-            }
             // Ajouter notre filtre JWT
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
 
