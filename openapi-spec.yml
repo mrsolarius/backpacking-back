@@ -1,0 +1,924 @@
+openapi: 3.0.3
+info:
+  title: Backpaking API
+  description: API pour l'application de backpaking
+  version: 1.0.0
+servers:
+  - url: /api
+    description: API principale
+tags:
+  - name: Auth
+    description: Opérations d'authentification
+  - name: Travels
+    description: Gestion des voyages
+  - name: Coordinates
+    description: Gestion des coordonnées GPS
+  - name: Pictures
+    description: Gestion des photos
+
+paths:
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Connexion d'un utilisateur
+      description: Authentifie un utilisateur et renvoie un token JWT
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Connexion réussie
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Identifiants invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erreur serveur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Inscription d'un utilisateur (localhost uniquement)
+      description: Crée un nouvel utilisateur (accessible uniquement depuis localhost)
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Utilisateur créé avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  userId:
+                    type: integer
+                    format: int64
+                  email:
+                    type: string
+        '400':
+          description: Requête invalide
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Accès refusé - uniquement accessible depuis localhost
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erreur serveur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /travels:
+    get:
+      tags:
+        - Travels
+      summary: Liste tous les voyages
+      description: Récupère la liste de tous les voyages
+      operationId: getAllTravels
+      responses:
+        '200':
+          description: Liste des voyages récupérée avec succès
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TravelDTO'
+
+    post:
+      tags:
+        - Travels
+      summary: Crée un nouveau voyage
+      description: Crée un nouveau voyage pour l'utilisateur authentifié
+      operationId: createTravel
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTravelRequest'
+      responses:
+        '201':
+          description: Voyage créé avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TravelDTO'
+        '400':
+          description: Requête invalide
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Utilisateur non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /travels/user/{userId}:
+    get:
+      tags:
+        - Travels
+      summary: Liste des voyages d'un utilisateur spécifique
+      description: Récupère la liste des voyages d'un utilisateur donné
+      operationId: getTravelsByUser
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Liste des voyages récupérée avec succès
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TravelDTO'
+
+  /travels/mine:
+    get:
+      tags:
+        - Travels
+      summary: Liste les voyages de l'utilisateur authentifié
+      description: Récupère la liste des voyages de l'utilisateur actuellement connecté
+      operationId: getMyTravels
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: includeDetails
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Liste des voyages récupérée avec succès
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TravelDTO'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /travels/{id}:
+    get:
+      tags:
+        - Travels
+      summary: Récupère un voyage spécifique
+      description: Récupère les détails d'un voyage par son ID
+      operationId: getTravelById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: includeDetails
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Voyage récupéré avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TravelDTO'
+        '404':
+          description: Voyage non trouvé
+          content:
+            application/json:
+              schema:
+                type: object
+
+    put:
+      tags:
+        - Travels
+      summary: Met à jour un voyage
+      description: Met à jour les informations d'un voyage existant
+      operationId: updateTravel
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTravelRequest'
+      responses:
+        '200':
+          description: Voyage mis à jour avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TravelDTO'
+        '400':
+          description: Requête invalide
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Voyage non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Travels
+      summary: Supprime un voyage
+      description: Supprime un voyage existant
+      operationId: deleteTravel
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Voyage supprimé avec succès
+          content:
+            application/json:
+              schema:
+                type: string
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Voyage non trouvé
+          content:
+            application/json:
+              schema:
+                type: string
+
+  /travels/{travelId}/coordinates:
+    get:
+      tags:
+        - Coordinates
+      summary: Liste les coordonnées d'un voyage
+      description: Récupère toutes les coordonnées associées à un voyage
+      operationId: getCoordinatesByTravelId
+      parameters:
+        - name: travelId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Liste des coordonnées récupérée avec succès
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CoordinateDTO'
+
+    post:
+      tags:
+        - Coordinates
+      summary: Ajoute des coordonnées à un voyage
+      description: Ajoute une liste de coordonnées à un voyage existant
+      operationId: addCoordinatesToTravel
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: travelId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCoordinatesRequest'
+      responses:
+        '200':
+          description: Coordonnées ajoutées avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateCoordinateResponseConfirm'
+        '400':
+          description: Requête invalide
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erreur serveur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /travels/{travelId}/coordinates/{id}:
+    delete:
+      tags:
+        - Coordinates
+      summary: Supprime une coordonnée
+      description: Supprime une coordonnée spécifique d'un voyage
+      operationId: deleteCoordinate
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: travelId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Coordonnée supprimée avec succès
+          content:
+            application/json:
+              schema:
+                type: string
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Coordonnée non trouvée
+          content:
+            application/json:
+              schema:
+                type: string
+
+  /travels/{travelId}/pictures:
+    get:
+      tags:
+        - Pictures
+      summary: Liste les photos d'un voyage
+      description: Récupère toutes les photos associées à un voyage
+      operationId: getPicturesByTravelId
+      parameters:
+        - name: travelId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Liste des photos récupérée avec succès
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PictureDTO'
+
+    post:
+      tags:
+        - Pictures
+      summary: Ajoute une photo à un voyage
+      description: Télécharge et ajoute une nouvelle photo à un voyage
+      operationId: addPictureToTravel
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: travelId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                picture:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Photo ajoutée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PictureDTO'
+        '400':
+          description: Requête invalide
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erreur serveur - informations EXIF manquantes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /travels/{travelId}/pictures/{id}:
+    get:
+      tags:
+        - Pictures
+      summary: Récupère une photo spécifique
+      description: Récupère les détails d'une photo par son ID
+      operationId: getPictureById
+      parameters:
+        - name: travelId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Photo récupérée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PictureDTO'
+        '403':
+          description: Accès interdit - la photo n'appartient pas au voyage spécifié
+          content:
+            application/json:
+              schema:
+                type: object
+        '404':
+          description: Photo non trouvée
+          content:
+            application/json:
+              schema:
+                type: object
+
+    delete:
+      tags:
+        - Pictures
+      summary: Supprime une photo
+      description: Supprime une photo spécifique d'un voyage
+      operationId: deletePicture
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: travelId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Photo supprimée avec succès
+          content:
+            application/json:
+              schema:
+                type: string
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Photo non trouvée
+          content:
+            application/json:
+              schema:
+                type: string
+
+  /travels/{travelId}/pictures/{id}/set-as-cover:
+    post:
+      tags:
+        - Pictures
+      summary: Définit une photo comme couverture du voyage
+      description: Configure une photo spécifique comme image de couverture du voyage
+      operationId: setCoverPicture
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: travelId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Photo de couverture définie avec succès
+          content:
+            application/json:
+              schema:
+                type: string
+        '400':
+          description: Échec de la définition de la photo de couverture
+          content:
+            application/json:
+              schema:
+                type: string
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          example: password123
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+    RegisterRequest:
+      type: object
+      required:
+        - name
+        - email
+        - password
+      properties:
+        name:
+          type: string
+          example: John Doe
+        email:
+          type: string
+          format: email
+          example: john.doe@example.com
+        password:
+          type: string
+          format: password
+          example: securePassword123
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Error message description
+
+    TravelDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          nullable: true
+        name:
+          type: string
+          example: Voyage en Asie
+        description:
+          type: string
+          example: Découverte des pays d'Asie du Sud-Est
+        startDate:
+          type: string
+          format: date-time
+          example: 2023-06-01T00:00:00Z
+        endDate:
+          type: string
+          format: date-time
+          nullable: true
+          example: 2023-07-15T00:00:00Z
+        coverPicture:
+          $ref: '#/components/schemas/PictureDTO'
+          nullable: true
+        userId:
+          type: integer
+          format: int64
+        coordinates:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/CoordinateDTO'
+        pictures:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/PictureDTO'
+        createdAt:
+          type: string
+          format: date-time
+          example: 2023-05-20T14:30:00Z
+        updatedAt:
+          type: string
+          format: date-time
+          example: 2023-05-20T14:30:00Z
+
+    CreateTravelRequest:
+      type: object
+      required:
+        - name
+        - description
+        - startDate
+      properties:
+        name:
+          type: string
+          example: Voyage en Asie
+        description:
+          type: string
+          example: Découverte des pays d'Asie du Sud-Est
+        startDate:
+          type: string
+          format: date-time
+          example: 2023-06-01T00:00:00Z
+
+    UpdateTravelRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          nullable: true
+          example: Nouveau nom de voyage
+        description:
+          type: string
+          nullable: true
+          example: Nouvelle description du voyage
+        startDate:
+          type: string
+          format: date-time
+          nullable: true
+          example: 2023-06-05T00:00:00Z
+        endDate:
+          type: string
+          format: date-time
+          nullable: true
+          example: 2023-07-20T00:00:00Z
+        coverPictureId:
+          type: integer
+          format: int64
+          nullable: true
+          example: 123
+
+    CoordinateDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          nullable: true
+        latitude:
+          type: string
+          example: 48.8566
+        longitude:
+          type: string
+          example: 2.3522
+        date:
+          type: string
+          format: date-time
+          example: 2023-06-10T14:30:00
+        createdAt:
+          type: string
+          format: date-time
+          example: 2023-06-10T14:30:00Z
+        updatedAt:
+          type: string
+          format: date-time
+          example: 2023-06-10T14:30:00Z
+
+    CreateCoordinateRequest:
+      type: object
+      required:
+        - latitude
+        - longitude
+        - date
+      properties:
+        latitude:
+          type: string
+          example: 48.8566
+        longitude:
+          type: string
+          example: 2.3522
+        date:
+          type: string
+          format: date-time
+          example: 2023-06-10T14:30:00Z
+
+    CreateCoordinatesRequest:
+      type: object
+      required:
+        - coordinates
+      properties:
+        coordinates:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateCoordinateRequest'
+
+    CreateCoordinateResponseConfirm:
+      type: object
+      properties:
+        savedCoordinate:
+          type: integer
+          format: int64
+          example: 5
+        startDate:
+          type: string
+          format: date-time
+          example: 2023-06-01T10:15:30Z
+        endDate:
+          type: string
+          format: date-time
+          example: 2023-06-15T18:45:20Z
+
+    PictureDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          nullable: true
+        path:
+          type: string
+          example: /uploads/pictures/raw/123456.jpg
+        latitude:
+          type: string
+          example: 48.8566
+        longitude:
+          type: string
+          example: 2.3522
+        altitude:
+          type: string
+          nullable: true
+          example: 35.5
+        date:
+          type: string
+          format: date-time
+          example: 2023-06-10T14:30:00Z
+        createdAt:
+          type: string
+          format: date-time
+          example: 2023-06-10T14:30:00Z
+        updatedAt:
+          type: string
+          format: date-time
+          example: 2023-06-10T14:30:00Z
+        versions:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/PictureVersionsDTO'
+
+    PictureVersionsDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          nullable: true
+        pictureId:
+          type: integer
+          format: int64
+        path:
+          type: string
+          example: /uploads/pictures/thumbnail/123456.jpg
+        resolution:
+          type: integer
+          format: int8
+          example: 2
+        versionType:
+          type: string
+          example: thumbnail
+        createdAt:
+          type: string
+          format: date-time
+          example: 2023-06-10T14:30:00Z
+        updatedAt:
+          type: string
+          format: date-time
+          example: 2023-06-10T14:30:00Z
