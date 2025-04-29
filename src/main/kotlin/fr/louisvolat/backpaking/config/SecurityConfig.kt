@@ -12,12 +12,16 @@ import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
+import org.springframework.web.cors.CorsConfigurationSource
+import org.springframework.web.filter.CorsFilter
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 class SecurityConfig(
-    private val jwtAuthenticationFilter: JwtAuthenticationFilter
+    private val jwtAuthenticationFilter: JwtAuthenticationFilter,
+    private val corsFilter: CorsFilter,
+    private val corsConfigurationSource: CorsConfigurationSource
 ) {
     @Value("\${app.upload.dir}")
     private lateinit var uploadDir: String
@@ -31,6 +35,9 @@ class SecurityConfig(
             .sessionManagement { session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             }
+            .cors { cors ->
+                cors.configurationSource(corsConfigurationSource)
+            }
             .authorizeHttpRequests { auth ->
                 // Routes accessibles à tous
                 auth.requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
@@ -39,7 +46,8 @@ class SecurityConfig(
                 auth.anyRequest().denyAll()
                 // Les routes spécifiques nécessitant une authentification seront gérées par @PreAuthorize
             }
-            // Ajouter notre filtre JWT
+            // Ajoutez le filtre CORS AVANT le filtre JWT
+            .addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter::class.java)
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
 
         return http.build()
