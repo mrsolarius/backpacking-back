@@ -14,12 +14,15 @@ class CorsConfig {
     @Value("\${app.upload.dir:uploads}")
     private lateinit var uploadDir: String
 
+    @Value("\${app.allowed.origins:http://localhost:3000}")
+    private lateinit var allowedOrigins: String
+
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
         val configuration = CorsConfiguration()
 
         // Autorisez votre domaine frontend
-        configuration.allowedOrigins = listOf("https://backpaking.louisvolat.fr")
+        configuration.allowedOrigins = allowedOrigins.split(",").map { it.trim() }
 
         // Méthodes HTTP autorisées
         configuration.allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
